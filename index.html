@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>女性健康管理系统（Firebase 版，无登录，多步表单）</title>
+  <title>女性健康小助手 · 生理周期与情绪管理</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Firebase compat 版本：App + Realtime Database -->
@@ -14,64 +14,172 @@
   <style>
     * {
       box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    }
+    :root {
+      --primary: #ff6b9c;
+      --primary-soft: #ffe4ee;
+      --primary-deep: #ff4a88;
+      --bg-gradient-start: #ffe9f2;
+      --bg-gradient-end: #fff7fb;
+      --card-bg: #ffffff;
+      --text-main: #333333;
+      --text-soft: #777777;
+      --border-soft: rgba(255, 107, 156, 0.12);
     }
     body {
       margin: 0;
-      background: #f5f6fa;
-      color: #333;
+      background: radial-gradient(circle at top, var(--bg-gradient-start), var(--bg-gradient-end));
+      color: var(--text-main);
     }
-    .container {
-      max-width: 1000px;
+    .app-shell {
+      max-width: 1100px;
       margin: 0 auto;
-      padding: 20px 16px 40px;
+      padding: 16px 14px 40px;
     }
+
+    /* 顶部导航条 */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 20px rgba(255, 107, 156, 0.18);
+      border: 1px solid rgba(255, 107, 156, 0.16);
+      backdrop-filter: blur(12px);
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .topbar-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 20%, #ffeef5, #ff94bf);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .topbar-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #ff407d;
+    }
+    .topbar-sub {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+    .topbar-right {
+      font-size: 11px;
+      color: var(--primary-deep);
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(255, 107, 156, 0.12);
+    }
+
+    .container {
+      margin-top: 10px;
+    }
+
     h1, h2, h3 {
       margin-top: 0;
     }
+
     .card {
-      background: #fff;
-      border-radius: 14px;
+      background: var(--card-bg);
+      border-radius: 18px;
       padding: 18px 18px 16px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      box-shadow: 0 14px 30px rgba(255, 107, 156, 0.1);
       margin-bottom: 16px;
+      border: 1px solid var(--border-soft);
+      position: relative;
+      overflow: hidden;
     }
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(255, 206, 225, 0.5), transparent 60%),
+        radial-gradient(circle at 100% 0%, rgba(255, 182, 203, 0.4), transparent 55%);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .card > * {
+      position: relative;
+      z-index: 1;
+    }
+
     .tagline {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 4px;
+      font-size: 11px;
+      color: var(--text-soft);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .badge {
-      display: inline-block;
+    .tag-pill {
       padding: 2px 8px;
       border-radius: 999px;
-      background: #dfe4ff;
-      color: #3b4cca;
+      background: rgba(255, 107, 156, 0.1);
+      color: var(--primary-deep);
       font-size: 11px;
-      margin-left: 6px;
     }
+
+    h1 {
+      font-size: 22px;
+      color: #ff336f;
+    }
+    h2 {
+      font-size: 18px;
+      color: #ff336f;
+    }
+    h3 {
+      font-size: 15px;
+      color: #ff4a88;
+    }
+    .small-text {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
     .row {
       display: flex;
       flex-wrap: wrap;
       gap: 14px;
     }
     .col-2 { flex: 2; min-width: 260px; }
-    .col-1 { flex: 1; min-width: 260px; }
+    .col-1 { flex: 1.1; min-width: 260px; }
 
     .form-group {
       margin-bottom: 10px;
     }
     label {
       display: block;
-      font-size: 13px;
+      font-size: 12px;
       margin-bottom: 4px;
+      color: #555;
     }
     input, select, textarea {
       width: 100%;
       padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
+      border-radius: 12px;
+      border: 1px solid #f2c6d6;
       font-size: 13px;
+      background: #fffafc;
+      outline: none;
+      transition: box-shadow 0.2s, border-color 0.2s, background 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(255, 107, 156, 0.15);
+      background: #ffffff;
     }
     textarea {
       resize: vertical;
@@ -80,61 +188,114 @@
     input[type="checkbox"] {
       width: auto;
       margin-right: 4px;
+      accent-color: var(--primary);
     }
     .checkbox-group {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px 12px;
+      gap: 6px 10px;
       font-size: 12px;
     }
     .checkbox-group label {
       margin-bottom: 0;
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: #fff3f8;
+      border: 1px solid rgba(255, 107, 156, 0.25);
     }
+
     button {
       border-radius: 999px;
-      padding: 8px 16px;
+      padding: 9px 16px;
       border: none;
       cursor: pointer;
       font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
     .btn-primary {
-      background: #4b7bec;
+      background: linear-gradient(135deg, #ff75a9, #ff4a88);
       color: #fff;
+      box-shadow: 0 8px 20px rgba(255, 107, 156, 0.5);
+    }
+    .btn-primary:hover {
+      filter: brightness(1.05);
     }
     .btn-secondary {
-      background: #f1f2f6;
-      color: #333;
+      background: #fff0f6;
+      color: #ff4a88;
+      border: 1px solid rgba(255, 107, 156, 0.35);
+      box-shadow: 0 4px 10px rgba(255, 107, 156, 0.15);
+    }
+    .btn-secondary:hover {
+      background: #ffe1ef;
     }
     .btn-small {
-      padding: 4px 10px;
-      font-size: 12px;
+      padding: 5px 10px;
+      font-size: 11px;
     }
-    .hidden {
-      display: none;
-    }
+
+    .hidden { display: none; }
+
     .alert {
       padding: 8px 10px;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 12px;
       margin-bottom: 8px;
     }
-    .alert-info { background: #e9f5ff; color: #1e90ff; }
-    .alert-success { background: #e7f9ed; color: #20bf6b; }
-    .alert-error { background: #ffe9ec; color: #eb3b5a; }
-    .small-text { font-size: 11px; color: #777; }
+    .alert-info {
+      background: #fff5fb;
+      color: #c44569;
+      border: 1px solid rgba(255, 107, 156, 0.35);
+    }
+    .alert-success {
+      background: #f0fff7;
+      color: #20bf6b;
+      border: 1px solid rgba(32,191,107,0.25);
+    }
+    .alert-error {
+      background: #fff2f4;
+      color: #eb3b5a;
+      border: 1px solid rgba(235,59,90,0.3);
+    }
 
     .section-title {
       font-weight: 600;
       margin: 10px 0 4px;
-      font-size: 14px;
+      font-size: 13px;
+      color: #ff4a88;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .reminder-item {
-      font-size: 12px;
-      margin-bottom: 4px;
+    .section-title::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--primary);
     }
-    .reminder-strong {
-      color: #eb3b5a;
-      font-weight: 600;
+
+    .step-indicator {
+      font-size: 11px;
+      color: var(--text-soft);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .step-indicator b {
+      color: var(--primary-deep);
+    }
+    .step-pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 107, 156, 0.4);
+      background: #fff3f8;
+      font-size: 11px;
+      color: #ff4a88;
     }
 
     table {
@@ -142,302 +303,330 @@
       border-collapse: collapse;
       font-size: 11px;
       margin-top: 4px;
+      background: #fffafa;
+      border-radius: 12px;
+      overflow: hidden;
     }
     th, td {
       padding: 4px 6px;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid #f8d7e4;
     }
     th {
-      background: #f1f2f6;
+      background: #ffe6f0;
+      color: #c44569;
     }
 
-    .step-indicator {
-      font-size: 12px;
-      color: #555;
-      margin-bottom: 8px;
+    canvas {
+      background: #fffdfd;
+      border-radius: 12px;
+      padding: 4px;
     }
-    .step-indicator b {
-      color: #4b7bec;
+
+    @media (max-width: 768px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <!-- 顶部说明 -->
-  <div class="card">
-    <div class="tagline">
-      ⚠ 本系统仅用于学习与研究示例，不构成医疗诊断或正式健康建议。
-      数据按本设备生成的匿名ID存入 Firebase Realtime Database。
-    </div>
-    <h1>女性健康管理系统（Firebase 示例，无登录，多步记录）</h1>
-    <p class="small-text">
-      流程：注册个人基本信息 → 多步记录 <b>生理周期 / 身体状况 / 情绪 / 生活方式</b> → 保存后生成女性生理健康建议 → 右侧可视化图表与趋势分析。
-    </p>
-  </div>
-
-  <!-- ========== 页面 1：注册个人基本信息 ========== -->
-  <div id="profile-view" class="card">
-    <h2>第 1 步：注册个人基本信息</h2>
-    <div id="profile-msg"></div>
-
-    <div class="row">
-      <div class="col-2">
-        <div class="form-group">
-          <label>姓名 / 昵称</label>
-          <input type="text" id="profile-name" placeholder="例如：小A" />
-        </div>
-        <div class="form-group">
-          <label>年龄</label>
-          <input type="number" id="profile-age" min="10" max="60" />
-        </div>
-        <div class="form-group">
-          <label>身高（cm）</label>
-          <input type="number" id="profile-height" min="120" max="200" />
-        </div>
-        <div class="form-group">
-          <label>当前体重（kg）</label>
-          <input type="number" id="profile-weight" min="30" max="120" step="0.1" />
-        </div>
-      </div>
-
-      <div class="col-1">
-        <div class="form-group">
-          <label>平均月经周期长度（天）<span class="badge">常见范围：21–35</span></label>
-          <input type="number" id="profile-cycle-length" min="15" max="60" />
-        </div>
-        <div class="form-group">
-          <label>平均经期持续天数（天）</label>
-          <input type="number" id="profile-period-length" min="2" max="10" />
-        </div>
-        <div class="form-group">
-          <label>最近一次月经开始日期</label>
-          <input type="date" id="profile-last-period" />
-        </div>
-        <div class="form-group">
-          <label>经期通常流量</label>
-          <select id="profile-usual-flow">
-            <option value="">请选择</option>
-            <option value="轻">轻</option>
-            <option value="中等">中等</option>
-            <option value="较多">较多</option>
-          </select>
-        </div>
+<div class="app-shell">
+  <!-- 顶部导航条 -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">🌸</div>
+      <div>
+        <div class="topbar-title">女性健康小助手</div>
+        <div class="topbar-sub">生理周期 · 情绪 · 生活方式温柔记录</div>
       </div>
     </div>
-
-    <button class="btn-primary" onclick="saveProfileAndNext()">保存并进入健康记录页面</button>
-    <p class="small-text" style="margin-top:6px;">
-      信息将以本设备匿名ID存储在 <code>users/{anonymousUid}/profile</code> 下。
-    </p>
+    <div class="topbar-right">本地匿名记录 · Firebase 学习示例</div>
   </div>
 
-  <!-- ========== 页面 2：多步每日记录 + 建议 ========== -->
-  <div id="tracker-view" class="hidden">
+  <div class="container">
+    <!-- 顶部说明 -->
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
-        <div>
-          <h2 id="tracker-title">第 2 步：每日健康记录与分析</h2>
-          <div class="step-indicator">
-            当前步骤：<b id="step-text">1 / 5</b>（生理周期 → 身体状况 → 情绪 → 情绪+生活方式 → 健康建议）
-          </div>
-        </div>
-        <button class="btn-secondary btn-small" onclick="backToProfile()">← 修改基本信息</button>
+      <div class="tagline">
+        <span class="tag-pill">⚠ 非医疗产品</span>
+        <span>仅用于课程 / 研究示例，不作为正式诊断与医疗建议。</span>
       </div>
+      <h1>生理周期与情绪管理 · Web 版</h1>
+      <p class="small-text">
+        流程：填写<b>基本资料</b> → 分步记录<b>生理周期 / 身体状况 / 情绪 / 生活方式</b> → 自动生成<b>健康建议</b>与<b>趋势图表</b>，
+        灵感参考美柚等女性健康 App 的视觉风格。
+      </p>
     </div>
 
-    <div class="row">
-      <!-- 左侧：多步表单 -->
-      <div class="col-2">
-        <div class="card">
-          <h3>📅 当日记录</h3>
-          <div id="record-msg"></div>
+    <!-- ========== 页面 1：注册个人基本信息 ========== -->
+    <div id="profile-view" class="card">
+      <h2>① 基本资料</h2>
+      <div id="profile-msg"></div>
 
+      <div class="row">
+        <div class="col-2">
           <div class="form-group">
-            <label>记录日期</label>
-            <input type="date" id="record-date" />
+            <label>昵称</label>
+            <input type="text" id="profile-name" placeholder="例如：小A / 小橙子" />
           </div>
-
-          <!-- Step 1：生理周期扩展数据 -->
-          <div class="step-page" id="step-1">
-            <div class="section-title">1. 生理周期扩展数据</div>
-            <div class="form-group">
-              <label>今天是否在经期？</label>
-              <select id="cycle-on-period">
-                <option value="否">否</option>
-                <option value="是">是</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>今日月经量</label>
-              <select id="cycle-flow">
-                <option value="">请选择</option>
-                <option value="轻">轻</option>
-                <option value="中等">中等</option>
-                <option value="较多">较多</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>经血颜色</label>
-              <select id="cycle-color">
-                <option value="">请选择</option>
-                <option value="鲜红">鲜红</option>
-                <option value="暗红">暗红</option>
-                <option value="咖啡色">咖啡色</option>
-                <option value="偏粉">偏粉</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>经期症状（可多选）</label>
-              <div class="checkbox-group">
-                <label><input type="checkbox" name="symptom" value="痛经">痛经</label>
-                <label><input type="checkbox" name="symptom" value="头痛">头痛</label>
-                <label><input type="checkbox" name="symptom" value="恶心">恶心</label>
-                <label><input type="checkbox" name="symptom" value="疲劳">疲劳</label>
-                <label><input type="checkbox" name="symptom" value="情绪波动">情绪波动</label>
-              </div>
-            </div>
-            <button class="btn-primary" type="button" onclick="nextStep()">下一页：身体状况 →</button>
+          <div class="form-group">
+            <label>年龄</label>
+            <input type="number" id="profile-age" min="10" max="60" />
           </div>
-
-          <!-- Step 2：身体状况相关 -->
-          <div class="step-page hidden" id="step-2">
-            <div class="section-title">2. 身体状况相关</div>
-            <div class="form-group">
-              <label>今日体重（kg）</label>
-              <input type="number" id="body-weight" step="0.1" />
-            </div>
-            <div class="form-group">
-              <label>今日步数</label>
-              <input type="number" id="body-steps" />
-            </div>
-            <div class="form-group">
-              <label>有氧 / 运动时间（分钟）</label>
-              <input type="number" id="body-exercise-min" />
-            </div>
-            <div class="form-group">
-              <label>昨晚睡眠时长（小时）</label>
-              <input type="number" id="sleep-hours" step="0.1" />
-            </div>
-            <div class="form-group">
-              <label>今日饮水量（毫升）</label>
-              <input type="number" id="body-water" />
-            </div>
-            <div class="form-group">
-              <label>饮食类型</label>
-              <select id="body-diet">
-                <option value="">请选择</option>
-                <option value="清淡">清淡</option>
-                <option value="偏咸">偏咸</option>
-                <option value="偏甜">偏甜</option>
-                <option value="高蛋白">高蛋白</option>
-                <option value="高脂 / 油炸">高脂 / 油炸</option>
-              </select>
-            </div>
-            <button class="btn-secondary" type="button" onclick="prevStep()">← 上一页</button>
-            <button class="btn-primary" type="button" onclick="nextStep()">下一页：情绪 →</button>
+          <div class="form-group">
+            <label>身高（cm）</label>
+            <input type="number" id="profile-height" min="120" max="200" />
           </div>
-
-          <!-- Step 3：情绪 & 触发因素 -->
-          <div class="step-page hidden" id="step-3">
-            <div class="section-title">3. 情绪 & 触发因素</div>
-            <div class="form-group">
-              <label>今日整体情绪评分（1=很差 ~ 5=很好）</label>
-              <input type="number" id="emotion-score" min="1" max="5" value="3" />
-            </div>
-            <div class="form-group">
-              <label>今日压力指数（1=很轻 ~ 5=很大）</label>
-              <input type="number" id="stress-score" min="1" max="5" value="3" />
-            </div>
-            <div class="form-group">
-              <label>情绪触发因素（可多选）</label>
-              <div class="checkbox-group">
-                <label><input type="checkbox" name="trigger" value="工作压力">工作压力</label>
-                <label><input type="checkbox" name="trigger" value="学业压力">学业压力</label>
-                <label><input type="checkbox" name="trigger" value="关系问题">关系问题</label>
-                <label><input type="checkbox" name="trigger" value="生理不适">生理不适</label>
-                <label><input type="checkbox" name="trigger" value="睡眠不足">睡眠不足</label>
-                <label><input type="checkbox" name="trigger" value="荷尔蒙波动">荷尔蒙波动</label>
-              </div>
-            </div>
-            <button class="btn-secondary" type="button" onclick="prevStep()">← 上一页</button>
-            <button class="btn-primary" type="button" onclick="nextStep()">下一页：情绪预测 & 生活方式 →</button>
+          <div class="form-group">
+            <label>当前体重（kg）</label>
+            <input type="number" id="profile-weight" min="30" max="120" step="0.1" />
           </div>
+        </div>
 
-          <!-- Step 4：情绪预测相关 + 生活方式 / 习惯（同一页） -->
-          <div class="step-page hidden" id="step-4">
-            <div class="section-title">4. 情绪预测相关信息</div>
-            <div class="form-group">
-              <label>肤况</label>
-              <select id="skin-status">
-                <option value="">请选择</option>
-                <option value="正常">正常</option>
-                <option value="长痘">长痘</option>
-                <option value="出油">出油</option>
-                <option value="干燥">干燥</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>激素相关感受（可多选）</label>
-              <div class="checkbox-group">
-                <label><input type="checkbox" name="hormone" value="易怒">易怒</label>
-                <label><input type="checkbox" name="hormone" value="情绪化">情绪化</label>
-                <label><input type="checkbox" name="hormone" value="食欲增加">食欲增加</label>
-                <label><input type="checkbox" name="hormone" value="食欲下降">食欲下降</label>
-              </div>
-            </div>
-
-            <div class="section-title">5. 生活方式 / 习惯</div>
-            <div class="form-group">
-              <label>运动类型（瑜伽 / 健身 / 跑步等）</label>
-              <input type="text" id="lifestyle-exercise-type" placeholder="例如：瑜伽30分钟 + 散步" />
-            </div>
-            <div class="form-group">
-              <label>性生活记录（可选，简单文字）</label>
-              <textarea id="lifestyle-sex" placeholder="例如：安全期 / 是否避孕（请谨慎输入隐私信息）"></textarea>
-            </div>
-
-            <button class="btn-secondary" type="button" onclick="prevStep()">← 上一页</button>
-            <button class="btn-primary" type="button" onclick="saveDailyRecord(true)">保存并生成今日健康建议 →</button>
+        <div class="col-1">
+          <div class="form-group">
+            <label>平均月经周期长度（天）<span class="badge">常见范围：21–35</span></label>
+            <input type="number" id="profile-cycle-length" min="15" max="60" />
           </div>
-
-          <!-- Step 5：保存后显示建议 -->
-          <div class="step-page hidden" id="step-5">
-            <div class="section-title">今日女性生理健康建议</div>
-            <div id="advice-content" class="small-text">
-              （保存记录后，这里会显示结合经期、身体状况与情绪的建议。）
-            </div>
-            <button class="btn-primary" type="button" onclick="goBackToFirstStep()">← 返回重新查看或继续记录</button>
+          <div class="form-group">
+            <label>平均经期持续天数（天）</label>
+            <input type="number" id="profile-period-length" min="2" max="10" />
+          </div>
+          <div class="form-group">
+            <label>最近一次月经开始日期</label>
+            <input type="date" id="profile-last-period" />
+          </div>
+          <div class="form-group">
+            <label>经期通常流量</label>
+            <select id="profile-usual-flow">
+              <option value="">请选择</option>
+              <option value="轻">轻</option>
+              <option value="中等">中等</option>
+              <option value="较多">较多</option>
+            </select>
           </div>
         </div>
       </div>
 
-      <!-- 右侧：提醒 & 分析 & 可视化 -->
-      <div class="col-1">
-        <div class="card">
-          <h3>🔔 健康提醒与周期建议</h3>
-          <div id="reminder-area">
-            <p class="small-text">根据你的基本周期信息与最近记录，系统将在这里给出经期预测、排卵期提醒等（仅在平均周期 21–35 天时启用）。</p>
+      <button class="btn-primary" onclick="saveProfileAndNext()">保存并开始每日记录 →</button>
+      <p class="small-text" style="margin-top:6px;">
+        数据会以本设备匿名ID存储在 <code>users/{anonymousUid}/profile</code> 下；刷新浏览器后依然可以继续使用本地账号。
+      </p>
+    </div>
+
+    <!-- ========== 页面 2：多步每日记录 + 建议 ========== -->
+    <div id="tracker-view" class="hidden">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+          <div>
+            <h2 id="tracker-title">② 每日温柔记录</h2>
+            <div class="step-indicator">
+              <span class="step-pill">当前步骤：<span id="step-text">1 / 5</span></span>
+              <span>生理周期 → 身体状况 → 情绪 → 情绪&生活方式 → 当日建议</span>
+            </div>
+          </div>
+          <button class="btn-secondary btn-small" onclick="backToProfile()">← 返回修改基本资料</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- 左侧：多步表单 -->
+        <div class="col-2">
+          <div class="card">
+            <h3>📅 当日记录</h3>
+            <div id="record-msg"></div>
+
+            <div class="form-group">
+              <label>记录日期</label>
+              <input type="date" id="record-date" />
+            </div>
+
+            <!-- Step 1：生理周期扩展数据 -->
+            <div class="step-page" id="step-1">
+              <div class="section-title">1. 生理周期扩展数据</div>
+              <div class="form-group">
+                <label>今天是否在经期？</label>
+                <select id="cycle-on-period">
+                  <option value="否">否</option>
+                  <option value="是">是</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>今日月经量</label>
+                <select id="cycle-flow">
+                  <option value="">请选择</option>
+                  <option value="轻">轻</option>
+                  <option value="中等">中等</option>
+                  <option value="较多">较多</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>经血颜色</label>
+                <select id="cycle-color">
+                  <option value="">请选择</option>
+                  <option value="鲜红">鲜红</option>
+                  <option value="暗红">暗红</option>
+                  <option value="咖啡色">咖啡色</option>
+                  <option value="偏粉">偏粉</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>经期症状（可多选）</label>
+                <div class="checkbox-group">
+                  <label><input type="checkbox" name="symptom" value="痛经">痛经</label>
+                  <label><input type="checkbox" name="symptom" value="头痛">头痛</label>
+                  <label><input type="checkbox" name="symptom" value="恶心">恶心</label>
+                  <label><input type="checkbox" name="symptom" value="疲劳">疲劳</label>
+                  <label><input type="checkbox" name="symptom" value="情绪波动">情绪波动</label>
+                </div>
+              </div>
+              <button class="btn-primary" type="button" onclick="nextStep()">下一页：身体状况 →</button>
+            </div>
+
+            <!-- Step 2：身体状况相关 -->
+            <div class="step-page hidden" id="step-2">
+              <div class="section-title">2. 身体状况相关</div>
+              <div class="form-group">
+                <label>今日体重（kg）</label>
+                <input type="number" id="body-weight" step="0.1" />
+              </div>
+              <div class="form-group">
+                <label>今日步数</label>
+                <input type="number" id="body-steps" />
+              </div>
+              <div class="form-group">
+                <label>有氧 / 运动时间（分钟）</label>
+                <input type="number" id="body-exercise-min" />
+              </div>
+              <div class="form-group">
+                <label>昨晚睡眠时长（小时）</label>
+                <input type="number" id="sleep-hours" step="0.1" />
+              </div>
+              <div class="form-group">
+                <label>今日饮水量（毫升）</label>
+                <input type="number" id="body-water" />
+              </div>
+              <div class="form-group">
+                <label>饮食类型</label>
+                <select id="body-diet">
+                  <option value="">请选择</option>
+                  <option value="清淡">清淡</option>
+                  <option value="偏咸">偏咸</option>
+                  <option value="偏甜">偏甜</option>
+                  <option value="高蛋白">高蛋白</option>
+                  <option value="高脂 / 油炸">高脂 / 油炸</option>
+                </select>
+              </div>
+              <button class="btn-secondary" type="button" onclick="prevStep()">← 上一页</button>
+              <button class="btn-primary" type="button" onclick="nextStep()">下一页：情绪 →</button>
+            </div>
+
+            <!-- Step 3：情绪 & 触发因素 -->
+            <div class="step-page hidden" id="step-3">
+              <div class="section-title">3. 情绪 & 触发因素</div>
+              <div class="form-group">
+                <label>今日整体情绪评分（1=很差 ~ 5=很好）</label>
+                <input type="number" id="emotion-score" min="1" max="5" value="3" />
+              </div>
+              <div class="form-group">
+                <label>今日压力指数（1=很轻 ~ 5=很大）</label>
+                <input type="number" id="stress-score" min="1" max="5" value="3" />
+              </div>
+              <div class="form-group">
+                <label>情绪触发因素（可多选）</label>
+                <div class="checkbox-group">
+                  <label><input type="checkbox" name="trigger" value="工作压力">工作压力</label>
+                  <label><input type="checkbox" name="trigger" value="学业压力">学业压力</label>
+                  <label><input type="checkbox" name="trigger" value="关系问题">关系问题</label>
+                  <label><input type="checkbox" name="trigger" value="生理不适">生理不适</label>
+                  <label><input type="checkbox" name="trigger" value="睡眠不足">睡眠不足</label>
+                  <label><input type="checkbox" name="trigger" value="荷尔蒙波动">荷尔蒙波动</label>
+                </div>
+              </div>
+              <button class="btn-secondary" type="button" onclick="prevStep()">← 上一页</button>
+              <button class="btn-primary" type="button" onclick="nextStep()">下一页：情绪预测 & 生活方式 →</button>
+            </div>
+
+            <!-- Step 4：情绪预测相关 + 生活方式 / 习惯（同一页） -->
+            <div class="step-page hidden" id="step-4">
+              <div class="section-title">4. 情绪预测相关信息</div>
+              <div class="form-group">
+                <label>肤况</label>
+                <select id="skin-status">
+                  <option value="">请选择</option>
+                  <option value="正常">正常</option>
+                  <option value="长痘">长痘</option>
+                  <option value="出油">出油</option>
+                  <option value="干燥">干燥</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>激素相关感受（可多选）</label>
+                <div class="checkbox-group">
+                  <label><input type="checkbox" name="hormone" value="易怒">易怒</label>
+                  <label><input type="checkbox" name="hormone" value="情绪化">情绪化</label>
+                  <label><input type="checkbox" name="hormone" value="食欲增加">食欲增加</label>
+                  <label><input type="checkbox" name="hormone" value="食欲下降">食欲下降</label>
+                </div>
+              </div>
+
+              <div class="section-title">5. 生活方式 / 习惯</div>
+              <div class="form-group">
+                <label>运动类型（瑜伽 / 健身 / 跑步等）</label>
+                <input type="text" id="lifestyle-exercise-type" placeholder="例如：瑜伽30分钟 + 散步" />
+              </div>
+              <div class="form-group">
+                <label>性生活记录（可选，简单文字）</label>
+                <textarea id="lifestyle-sex" placeholder="例如：安全期 / 是否避孕（请谨慎输入隐私信息）"></textarea>
+              </div>
+
+              <button class="btn-secondary" type="button" onclick="prevStep()">← 上一页</button>
+              <button class="btn-primary" type="button" onclick="saveDailyRecord(true)">保存并生成今日建议 →</button>
+            </div>
+
+            <!-- Step 5：保存后显示建议 -->
+            <div class="step-page hidden" id="step-5">
+              <div class="section-title">今日女性生理健康建议</div>
+              <div id="advice-content" class="small-text">
+                （保存记录后，这里会显示结合经期、身体状况与情绪的文字建议。）
+              </div>
+              <button class="btn-primary" type="button" onclick="goBackToFirstStep()">← 返回继续记录</button>
+            </div>
           </div>
         </div>
 
-        <div class="card">
-          <h3>📊 情绪 / 压力 / 睡眠趋势图</h3>
-          <canvas id="historyChart" height="150"></canvas>
-          <div id="chart-summary" class="small-text" style="margin-top:6px;">
-            暂无足够数据，请先记录几天。
+        <!-- 右侧：提醒 & 分析 & 可视化 -->
+        <div class="col-1">
+          <div class="card">
+            <h3>🔔 健康提醒与周期建议</h3>
+            <div id="reminder-area">
+              <p class="small-text">
+                根据你的周期参数与最近记录，系统在这里给出<b>经期预测、排卵期提醒</b>等提示。
+                仅在平均周期 21–35 天范围内启用预测。
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div class="card">
-          <h3>🧠 情绪趋势 & 简单预测</h3>
-          <div id="emotion-prediction" class="small-text">
-            暂无足够数据，请先记录几天的情绪。
+          <div class="card">
+            <h3>📊 情绪 / 压力 / 睡眠趋势</h3>
+            <canvas id="historyChart" height="150"></canvas>
+            <div id="chart-summary" class="small-text" style="margin-top:6px;">
+              暂无数据，请先连续记录几天。
+            </div>
           </div>
-        </div>
 
-        <div class="card">
-          <h3>🗂 最近记录一览（简版）</h3>
-          <div id="recent-records" class="small-text">正在加载...</div>
+          <div class="card">
+            <h3>🧠 情绪趋势 & 简单预测</h3>
+            <div id="emotion-prediction" class="small-text">
+              暂无足够数据，请先记录几天的情绪。
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>🗂 最近记录一览（简版）</h3>
+            <div id="recent-records" class="small-text">正在加载...</div>
+          </div>
         </div>
       </div>
     </div>
@@ -460,7 +649,6 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // 本地匿名UID
   let currentUid = null;
   let userProfile = null;
   let currentStep = 1;
@@ -549,13 +737,13 @@
     };
 
     if (!profile.name || !profile.age || !profile.cycleLength || !profile.lastPeriodStart) {
-      showMessage('profile-msg', '请至少填写姓名、年龄、平均周期长度和最近一次月经开始日期。', 'error');
+      showMessage('profile-msg', '请至少填写昵称、年龄、平均周期长度和最近一次月经开始日期。', 'error');
       return;
     }
 
     db.ref('users/' + uid + '/profile').set(profile)
       .then(() => {
-        showMessage('profile-msg', '个人信息已保存。', 'success');
+        showMessage('profile-msg', '基本资料已保存。', 'success');
         userProfile = profile;
         enterTrackerView();
       })
@@ -588,7 +776,7 @@
     document.getElementById('tracker-view').classList.remove('hidden');
     if (userProfile && userProfile.name) {
       document.getElementById('tracker-title').textContent =
-        `第 2 步：${userProfile.name} 的每日健康记录与分析`;
+        `② ${userProfile.name} 的每日记录`;
     }
     currentStep = 1;
     updateStepUI();
@@ -670,14 +858,11 @@
     const today = new Date();
     const msPerDay = 24*60*60*1000;
 
-    // 如果不在常见范围 21–35 天，只给温和提示，不做预测
     if (cycleLen < 21 || cycleLen > 35) {
       box.innerHTML = `
-        <div class="reminder-item reminder-strong">
-          当前设置的平均周期为 ${cycleLen} 天，超出常见范围（21–35 天），系统暂不提供经期与排卵期预测。
-        </div>
-        <div class="reminder-item">
-          如果周期长期不规则，建议记录一段时间后咨询专业医生。
+        <div class="alert alert-info">
+          当前平均周期为 ${cycleLen} 天，超出常见范围（21–35 天），系统暂不提供经期与排卵期预测。
+          如长期不规律，可结合记录情况咨询医生。
         </div>
       `;
       return;
@@ -690,7 +875,6 @@
 
     let html = '';
 
-    // 经期预测提醒（仅在合理范围内）
     if (daysToNext <= 3 && daysToNext >= -3) {
       html += `<div class="reminder-item reminder-strong">
         预计 ${daysToNext === 0 ? '今天' : (daysToNext + ' 天后')} 开始生理期，请提前准备经期用品，注意保暖与休息。
@@ -699,11 +883,10 @@
       html += `<div class="reminder-item">预计约 ${daysToNext} 天后开始下一次生理期。</div>`;
     } else if (daysToNext < -3) {
       html += `<div class="reminder-item">
-        本次月经已超过预计时间，如持续明显推迟，可结合自身情况考虑是否需要进一步检查。
+        本次月经已超过预计时间，如长期明显推迟，可结合自身情况考虑是否需要进一步检查。
       </div>`;
     }
 
-    // 排卵期提醒 / 易孕窗口
     if (daysToOvulation >= -2 && daysToOvulation <= 2) {
       html += `<div class="reminder-item reminder-strong">
         当前处于排卵期附近易孕窗口。如不备孕，请注意有效避孕；如有备孕计划，可以适当安排。
@@ -745,7 +928,6 @@
       snap.forEach(child => list.push(child.val()));
       list.sort((a,b) => (a.date > b.date ? 1 : -1));
 
-      // 简表
       let html = '<table><thead><tr><th>日期</th><th>情绪</th><th>压力</th><th>睡眠h</th></tr></thead><tbody>';
       const last10 = list.slice(-10);
       last10.forEach(r => {
@@ -759,10 +941,8 @@
       html += '</tbody></table>';
       recordsDiv.innerHTML = html;
 
-      // 情绪 / 压力 / 睡眠趋势图
       updateHistoryChart(list);
 
-      // 情绪预测 + 文本总结
       const last7 = list.slice(-7);
       const emoArr = last7.map(r => Number(r.emotionScore || 0)).filter(v => v > 0);
       const stressArr = last7.map(r => Number(r.stressScore || 0)).filter(v => v > 0);
@@ -796,10 +976,9 @@
         <div class="small-text" style="margin-top:4px;">该预测仅基于简单统计规则，不构成心理或医疗建议。</div>
       `;
 
-      // 图表分析总结
       chartSummary.innerHTML = `
         最近 ${list.length} 次记录中，情绪与压力整体呈现 <b>${level}</b> 水平。
-        可重点关注压力较高或睡眠偏少的日期，结合图表进行自我调节与规划。
+        可结合图表观察「压力高 + 睡眠少」的日期，尝试为自己安排更多恢复时间。
       `;
     });
   }
@@ -823,26 +1002,26 @@
           {
             label: '情绪评分',
             data: emoData,
-            borderColor: '#4b7bec',
-            backgroundColor: 'rgba(75,123,236,0.1)',
-            tension: 0.2,
+            borderColor: '#ff6b9c',
+            backgroundColor: 'rgba(255,107,156,0.12)',
+            tension: 0.25,
             yAxisID: 'y'
           },
           {
             label: '压力指数',
             data: stressData,
-            borderColor: '#eb3b5a',
-            backgroundColor: 'rgba(235,59,90,0.1)',
-            tension: 0.2,
+            borderColor: '#ff9f1c',
+            backgroundColor: 'rgba(255,159,28,0.12)',
+            tension: 0.25,
             yAxisID: 'y'
           },
           {
             label: '睡眠时长（小时）',
             data: sleepData,
-            borderColor: '#20bf6b',
-            backgroundColor: 'rgba(32,191,107,0.1)',
+            borderColor: '#2ed573',
+            backgroundColor: 'rgba(46,213,115,0.12)',
             borderDash: [4,2],
-            tension: 0.2,
+            tension: 0.25,
             yAxisID: 'y1'
           }
         ]
@@ -851,6 +1030,13 @@
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         stacked: false,
+        plugins: {
+          legend: {
+            labels: {
+              font: { size: 11 }
+            }
+          }
+        },
         scales: {
           y: {
             type: 'linear',
@@ -873,14 +1059,10 @@
   }
 
   // ========== 7. 生成“女性生理健康建议” ==========
-// 结合当日记录 + 周期信息，输出一段较完整的建议文本
   function buildAdviceHTML(profile, record) {
     const parts = [];
-
-    // 基本情况说明
     parts.push(`<p>基于你今天的记录（日期：<b>${record.date}</b>）、周期参数和近期状态，以下建议仅供自我观察与参考。</p>`);
 
-    // 经期相关建议
     if (record.onPeriod === '是') {
       parts.push('<p><b>经期护理：</b>今天处于经期，请注意保暖，避免腹部受凉和过度劳累。可适当进行轻柔拉伸或散步，有助于缓解不适。</p>');
       if (record.flow === '较多') {
@@ -893,7 +1075,6 @@
       parts.push('<p><b>非经期观察：</b>目前不在经期，可关注白带、情绪、睡眠与能量水平的变化，为下一个周期作准备。</p>');
     }
 
-    // 情绪与压力
     if (record.emotionScore != null) {
       if (record.emotionScore <= 2) {
         parts.push('<p><b>情绪关怀：</b>今天整体情绪评分偏低，可以给自己多一点休息与缓冲时间。建议安排一些让自己放松的活动，如散步、听舒缓音乐或进行简单冥想。</p>');
@@ -905,7 +1086,6 @@
       parts.push('<p>你的压力指数偏高，建议尝试将任务拆分成小步骤，合理安排节奏；必要时可以与信任的人（朋友、家人、老师等）分享压力感受。</p>');
     }
 
-    // 睡眠
     if (record.sleepHours != null) {
       if (record.sleepHours < 6) {
         parts.push('<p><b>睡眠提醒：</b>昨晚睡眠时长偏短（少于 6 小时），长期睡眠不足会加重情绪波动和经期不适。建议尽可能保证 7 小时左右的高质量睡眠。</p>');
@@ -914,7 +1094,6 @@
       }
     }
 
-    // 生活方式
     if (record.dietType === '高脂 / 油炸' || record.dietType === '偏甜') {
       parts.push('<p><b>饮食建议：</b>今天的饮食偏油或偏甜，建议在经期及排卵附近适度控制此类食物，多选择清淡、高纤维、高蛋白的组合，有助于血糖稳定和情绪平稳。</p>');
     } else if (record.dietType === '清淡' || record.dietType === '高蛋白') {
@@ -933,7 +1112,6 @@
       }
     }
 
-    // 情绪触发因素 & 激素相关感受
     if (record.triggers && record.triggers.length > 0) {
       parts.push(`<p><b>情绪触发因素：</b>你记录的可能触发因素包括：${record.triggers.join('、')}。可以尝试为其中一项设计一个“小应对策略”，例如：为工作压力设定可控的待办清单，为睡眠不足调整固定的上床时间。</p>`);
     }
@@ -941,7 +1119,6 @@
       parts.push(`<p>你提到的激素相关感受（如：${record.hormoneFeelings.join('、')}）在经前和经期阶段较为常见。若这些情况持续影响学习、工作或人际关系，建议适时寻求专业意见（妇科或心理咨询）。</p>`);
     }
 
-    // 周期整体观察提醒
     if (profile && profile.cycleLength) {
       const c = Number(profile.cycleLength);
       if (c >= 21 && c <= 35) {
