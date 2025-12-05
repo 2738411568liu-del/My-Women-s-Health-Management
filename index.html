@@ -2,174 +2,730 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>女性健康管理系统 - Firebase 版</title>
+  <title>女性健康管理系统（Firebase 版）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+  <!-- 使用 Firebase v10 兼容版（compat），方便用旧语法 firebase.xxx -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 
   <style>
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
     body {
-      font-family: Arial, sans-serif;
-      background: #f7f7fb;
       margin: 0;
-      padding: 20px;
+      background: #f5f6fa;
+      color: #333;
     }
     .container {
-      max-width: 600px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
     }
-    input, button {
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 18px 18px 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      margin-bottom: 16px;
+    }
+    .tagline {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #dfe4ff;
+      color: #3b4cca;
+      font-size: 11px;
+      margin-left: 6px;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .col-2 { flex: 2; min-width: 260px; }
+    .col-1 { flex: 1; min-width: 260px; }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    input, select, textarea {
       width: 100%;
-      padding: 10px;
-      margin-top: 10px;
+      padding: 8px 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      font-size: 14px;
+      font-size: 13px;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+    input[type="checkbox"] {
+      width: auto;
+      margin-right: 4px;
+    }
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      font-size: 12px;
+    }
+    .checkbox-group label {
+      margin-bottom: 0;
     }
     button {
-      background: #4b7bec;
-      color: white;
+      border-radius: 999px;
+      padding: 8px 16px;
+      border: none;
       cursor: pointer;
+      font-size: 13px;
     }
-    button:hover {
-      background: #3867d6;
+    .btn-primary {
+      background: #4b7bec;
+      color: #fff;
     }
-    h2 { margin-bottom: 5px; }
-    .record {
-      padding: 10px;
-      background: #eef3ff;
+    .btn-secondary {
+      background: #f1f2f6;
+      color: #333;
+    }
+    .btn-small {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+    .hidden {
+      display: none;
+    }
+    .alert {
+      padding: 8px 10px;
       border-radius: 8px;
-      margin-top: 10px;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .alert-info { background: #e9f5ff; color: #1e90ff; }
+    .alert-success { background: #e7f9ed; color: #20bf6b; }
+    .alert-error { background: #ffe9ec; color: #eb3b5a; }
+    .small-text { font-size: 11px; color: #777; }
+
+    .section-title {
+      font-weight: 600;
+      margin: 10px 0 4px;
+      font-size: 14px;
+    }
+    .pill {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #f1f2f6;
+      margin-right: 4px;
+      margin-top: 2px;
+    }
+    .reminder-item {
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .reminder-strong {
+      color: #eb3b5a;
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+    th, td {
+      padding: 4px 6px;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background: #f1f2f6;
     }
   </style>
 </head>
 <body>
-
-  <div class="container">
-    <h2>女性健康管理（Firebase 数据库版）</h2>
-    <p>匿名登录已自动启用，数据将存入 Firebase Realtime Database。</p>
-
-    <hr>
-
-    <h3>📅 记录每日健康状态</h3>
-
-    <label>生理期开始日期（1-31）</label>
-    <input type="number" id="periodStart" min="0" max="31" placeholder="例如：5（无请输入0）">
-
-    <label>生理期结束日期（1-31）</label>
-    <input type="number" id="periodEnd" min="0" max="31" placeholder="例如：10（无请输入0）">
-
-    <label>身体状态（1-5）</label>
-    <input type="number" id="bodyCondition" min="1" max="5" value="3">
-
-    <label>情绪状态（1-5）</label>
-    <input type="number" id="emotionState" min="1" max="5" value="3">
-
-    <button onclick="saveRecord()">保存记录</button>
-
-    <hr>
-
-    <h3>📊 历史记录</h3>
-    <div id="records"></div>
+<div class="container">
+  <!-- 顶部说明 -->
+  <div class="card">
+    <div class="tagline">⚠ 本系统仅用于学习与研究示例，不构成医疗诊断或正式健康建议。</div>
+    <h1>女性健康管理系统（Firebase示例）</h1>
+    <p class="small-text">
+      流程：注册个人基本信息 → 进入第二页记录 <b>生理周期 / 身体状况 / 情绪与生活方式</b> → 自动生成简单健康提醒与情绪预测提示。
+    </p>
   </div>
 
-  <script>
-    // ===============================
-    // Firebase 配置（已使用你提供的配置）
-    // ===============================
-    const firebaseConfig = {
-      apiKey: "AIzaSyA8m1mFT8lwW553kB3pJmVv8ViMEBYSrDM",
-      authDomain: "my-women-s-health-management.firebaseapp.com",
-      databaseURL: "https://my-women-s-health-management-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "my-women-s-health-management",
-      storageBucket: "my-women-s-health-management.firebasestorage.app",
-      messagingSenderId: "281305293774",
-      appId: "1:281305293774:web:7f3345d120d1b2d5c8819f",
-      measurementId: "G-E2T3SZ6CX9"
+  <!-- ========== 页面 1：注册个人基本信息 ========== -->
+  <div id="profile-view" class="card">
+    <h2>第 1 步：注册个人基本信息</h2>
+    <div id="profile-msg"></div>
+
+    <div class="row">
+      <div class="col-2">
+        <div class="form-group">
+          <label>姓名 / 昵称</label>
+          <input type="text" id="profile-name" placeholder="例如：小A" />
+        </div>
+        <div class="form-group">
+          <label>年龄</label>
+          <input type="number" id="profile-age" min="10" max="60" />
+        </div>
+        <div class="form-group">
+          <label>身高（cm）</label>
+          <input type="number" id="profile-height" min="120" max="200" />
+        </div>
+        <div class="form-group">
+          <label>当前体重（kg）</label>
+          <input type="number" id="profile-weight" min="30" max="120" step="0.1" />
+        </div>
+      </div>
+
+      <div class="col-1">
+        <div class="form-group">
+          <label>平均月经周期长度（天）<span class="badge">例如：28</span></label>
+          <input type="number" id="profile-cycle-length" min="20" max="40" />
+        </div>
+        <div class="form-group">
+          <label>平均经期持续天数（天）</label>
+          <input type="number" id="profile-period-length" min="2" max="10" />
+        </div>
+        <div class="form-group">
+          <label>最近一次月经开始日期</label>
+          <input type="date" id="profile-last-period" />
+        </div>
+        <div class="form-group">
+          <label>经期通常流量</label>
+          <select id="profile-usual-flow">
+            <option value="">请选择</option>
+            <option value="轻">轻</option>
+            <option value="中等">中等</option>
+            <option value="较多">较多</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="saveProfileAndNext()">保存并进入健康记录页面</button>
+    <p class="small-text" style="margin-top:6px;">
+      提示：信息将以匿名 UID 存储在 Firebase Realtime Database 的 <code>users/{uid}/profile</code> 下。
+    </p>
+  </div>
+
+  <!-- ========== 页面 2：每日记录与分析 ========== -->
+  <div id="tracker-view" class="hidden">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+        <div>
+          <h2 id="tracker-title">第 2 步：每日健康记录与分析</h2>
+          <p class="small-text">
+            请根据当天情况填写，系统会结合你的周期参数给出简单的
+            <b>经期 / 排卵 / 情绪波动</b> 提示。
+          </p>
+        </div>
+        <button class="btn-secondary btn-small" onclick="backToProfile()">← 修改基本信息</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- 左侧：表单 -->
+      <div class="col-2">
+        <div class="card">
+          <h3>📅 当日记录</h3>
+          <div id="record-msg"></div>
+
+          <div class="form-group">
+            <label>记录日期</label>
+            <input type="date" id="record-date" />
+          </div>
+
+          <div class="section-title">1. 生理周期扩展数据</div>
+          <div class="form-group">
+            <label>今天是否在经期？</label>
+            <select id="cycle-on-period">
+              <option value="否">否</option>
+              <option value="是">是</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>今日月经量</label>
+            <select id="cycle-flow">
+              <option value="">请选择</option>
+              <option value="轻">轻</option>
+              <option value="中等">中等</option>
+              <option value="较多">较多</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>经血颜色</label>
+            <select id="cycle-color">
+              <option value="">请选择</option>
+              <option value="鲜红">鲜红</option>
+              <option value="暗红">暗红</option>
+              <option value="咖啡色">咖啡色</option>
+              <option value="偏粉">偏粉</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>经期症状（可多选）</label>
+            <div class="checkbox-group">
+              <label><input type="checkbox" name="symptom" value="痛经">痛经</label>
+              <label><input type="checkbox" name="symptom" value="头痛">头痛</label>
+              <label><input type="checkbox" name="symptom" value="恶心">恶心</label>
+              <label><input type="checkbox" name="symptom" value="疲劳">疲劳</label>
+              <label><input type="checkbox" name="symptom" value="情绪波动">情绪波动</label>
+            </div>
+          </div>
+
+          <div class="section-title">2. 身体状况相关</div>
+          <div class="form-group">
+            <label>今日体重（kg）</label>
+            <input type="number" id="body-weight" step="0.1" />
+          </div>
+          <div class="form-group">
+            <label>今日步数</label>
+            <input type="number" id="body-steps" />
+          </div>
+          <div class="form-group">
+            <label>有氧 / 运动时间（分钟）</label>
+            <input type="number" id="body-exercise-min" />
+          </div>
+          <div class="form-group">
+            <label>睡眠开始时间</label>
+            <input type="time" id="sleep-start" />
+          </div>
+          <div class="form-group">
+            <label>睡眠结束时间</label>
+            <input type="time" id="sleep-end" />
+          </div>
+          <div class="form-group">
+            <label>今日饮水量（毫升）</label>
+            <input type="number" id="body-water" />
+          </div>
+          <div class="form-group">
+            <label>饮食类型</label>
+            <select id="body-diet">
+              <option value="">请选择</option>
+              <option value="清淡">清淡</option>
+              <option value="偏咸">偏咸</option>
+              <option value="偏甜">偏甜</option>
+              <option value="高蛋白">高蛋白</option>
+              <option value="高脂 / 油炸">高脂 / 油炸</option>
+            </select>
+          </div>
+
+          <div class="section-title">3. 情绪 & 触发因素</div>
+          <div class="form-group">
+            <label>今日整体情绪评分（1=很差 ~ 5=很好）</label>
+            <input type="number" id="emotion-score" min="1" max="5" value="3" />
+          </div>
+          <div class="form-group">
+            <label>今日压力指数（1=很轻 ~ 5=很大）</label>
+            <input type="number" id="stress-score" min="1" max="5" value="3" />
+          </div>
+          <div class="form-group">
+            <label>情绪触发因素（可多选）</label>
+            <div class="checkbox-group">
+              <label><input type="checkbox" name="trigger" value="工作压力">工作压力</label>
+              <label><input type="checkbox" name="trigger" value="学业压力">学业压力</label>
+              <label><input type="checkbox" name="trigger" value="关系问题">关系问题</label>
+              <label><input type="checkbox" name="trigger" value="生理不适">生理不适</label>
+              <label><input type="checkbox" name="trigger" value="睡眠不足">睡眠不足</label>
+              <label><input type="checkbox" name="trigger" value="荷尔蒙波动">荷尔蒙波动</label>
+            </div>
+          </div>
+
+          <div class="section-title">4. 情绪预测相关信息</div>
+          <div class="form-group">
+            <label>肤况</label>
+            <select id="skin-status">
+              <option value="">请选择</option>
+              <option value="正常">正常</option>
+              <option value="长痘">长痘</option>
+              <option value="出油">出油</option>
+              <option value="干燥">干燥</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>激素相关感受（可多选）</label>
+            <div class="checkbox-group">
+              <label><input type="checkbox" name="hormone" value="易怒">易怒</label>
+              <label><input type="checkbox" name="hormone" value="情绪化">情绪化</label>
+              <label><input type="checkbox" name="hormone" value="食欲增加">食欲增加</label>
+              <label><input type="checkbox" name="hormone" value="食欲下降">食欲下降</label>
+            </div>
+          </div>
+
+          <div class="section-title">5. 生活方式 / 习惯</div>
+          <div class="form-group">
+            <label>运动类型（瑜伽 / 健身 / 跑步等）</label>
+            <input type="text" id="lifestyle-exercise-type" placeholder="例如：瑜伽30分钟 + 散步" />
+          </div>
+          <div class="form-group">
+            <label>性生活记录（可选，简单文字）</label>
+            <textarea id="lifestyle-sex" placeholder="例如：安全期 / 是否避孕（请谨慎输入隐私信息）"></textarea>
+          </div>
+
+          <button class="btn-primary" onclick="saveDailyRecord()">保存今日记录</button>
+        </div>
+      </div>
+
+      <!-- 右侧：提醒 & 简要分析 -->
+      <div class="col-1">
+        <div class="card">
+          <h3>🔔 健康提醒与建议</h3>
+          <div id="reminder-area">
+            <p class="small-text">根据你的基本周期信息与最近记录，系统将在这里给出：经期预测、排卵期提示、情绪波动提醒等。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🧠 情绪趋势 & 简单预测</h3>
+          <div id="emotion-prediction" class="small-text">
+            暂无足够数据，请先记录几天的情绪。
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🗂 最近记录一览（简版）</h3>
+          <div id="recent-records" class="small-text">正在加载...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ========== 1. 初始化 Firebase ==========
+  const firebaseConfig = {
+    apiKey: "AIzaSyA8m1mFT8lwW553kB3pJmVv8ViMEBYSrDM",
+    authDomain: "my-women-s-health-management.firebaseapp.com",
+    databaseURL: "https://my-women-s-health-management-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "my-women-s-health-management",
+    storageBucket: "my-women-s-health-management.firebasestorage.app",
+    messagingSenderId: "281305293774",
+    appId: "1:281305293774:web:7f3345d120d1b2d5c8819f",
+    measurementId: "G-E2T3SZ6CX9"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  let currentUser = null;
+  let userProfile = null;  // 存储基本信息
+
+  // 匿名登录
+  auth.signInAnonymously()
+    .then(() => {
+      console.log("匿名登录成功");
+      auth.onAuthStateChanged(user => {
+        currentUser = user;
+        if (user) {
+          loadProfile();
+        }
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      showMessage('profile-msg', 'Firebase 登录失败：' + err.message, 'error');
+    });
+
+  // ========== 通用提示函数 ==========
+  function showMessage(id, text, type) {
+    const el = document.getElementById(id);
+    if (!text) { el.innerHTML = ''; return; }
+    const cls = type === 'success' ? 'alert alert-success' :
+                type === 'error'   ? 'alert alert-error'   :
+                                     'alert alert-info';
+    el.className = cls;
+    el.textContent = text;
+  }
+
+  function todayStr() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('record-date').value = todayStr();
+  });
+
+  // ========== 2. 个人信息：保存 & 加载 & 页面切换 ==========
+  function saveProfileAndNext() {
+    if (!currentUser) {
+      showMessage('profile-msg', '尚未登录 Firebase。', 'error');
+      return;
+    }
+    const uid = currentUser.uid;
+    const profile = {
+      name: document.getElementById('profile-name').value.trim(),
+      age: Number(document.getElementById('profile-age').value),
+      height: Number(document.getElementById('profile-height').value),
+      weight: Number(document.getElementById('profile-weight').value),
+      cycleLength: Number(document.getElementById('profile-cycle-length').value),
+      periodLength: Number(document.getElementById('profile-period-length').value),
+      lastPeriodStart: document.getElementById('profile-last-period').value,
+      usualFlow: document.getElementById('profile-usual-flow').value,
+      updatedAt: Date.now()
     };
 
-    // 初始化 Firebase
-    firebase.initializeApp(firebaseConfig);
+    if (!profile.name || !profile.age || !profile.cycleLength || !profile.lastPeriodStart) {
+      showMessage('profile-msg', '请至少填写姓名、年龄、平均周期长度和最近一次月经开始日期。', 'error');
+      return;
+    }
 
-    const auth = firebase.auth();
-    const db = firebase.database();
-
-    let currentUser = null;
-
-    // 自动匿名登录
-    auth.signInAnonymously()
+    db.ref('users/' + uid + '/profile').set(profile)
       .then(() => {
-        console.log("匿名登录成功");
-        auth.onAuthStateChanged(user => {
-          currentUser = user;
-          loadRecords();
-        });
+        showMessage('profile-msg', '个人信息已保存。', 'success');
+        userProfile = profile;
+        enterTrackerView();
       })
-      .catch(err => console.error(err));
+      .catch(err => showMessage('profile-msg', '保存失败：' + err.message, 'error'));
+  }
 
+  function loadProfile() {
+    const uid = currentUser.uid;
+    db.ref('users/' + uid + '/profile').once('value', snap => {
+      const data = snap.val();
+      if (data) {
+        userProfile = data;
+        // 自动填充表单
+        document.getElementById('profile-name').value = data.name || '';
+        document.getElementById('profile-age').value = data.age || '';
+        document.getElementById('profile-height').value = data.height || '';
+        document.getElementById('profile-weight').value = data.weight || '';
+        document.getElementById('profile-cycle-length').value = data.cycleLength || '';
+        document.getElementById('profile-period-length').value = data.periodLength || '';
+        document.getElementById('profile-last-period').value = data.lastPeriodStart || '';
+        document.getElementById('profile-usual-flow').value = data.usualFlow || '';
 
-    // ==========================
-    // 保存记录到 Firebase
-    // ==========================
-    function saveRecord() {
-      if (!currentUser) return alert("用户未登录");
+        // 默认直接进入记录页面（如果已有资料）
+        enterTrackerView();
+      }
+    });
+  }
 
-      const uid = currentUser.uid;
-      const today = new Date().toISOString().split('T')[0];
+  function enterTrackerView() {
+    document.getElementById('profile-view').classList.add('hidden');
+    document.getElementById('tracker-view').classList.remove('hidden');
+    if (userProfile && userProfile.name) {
+      document.getElementById('tracker-title').textContent =
+        `第 2 步：${userProfile.name} 的每日健康记录与分析`;
+    }
+    refreshReminders();
+    loadRecentRecordsAndEmotion();
+  }
 
-      const data = {
-        date: today,
-        periodStart: Number(document.getElementById("periodStart").value),
-        periodEnd: Number(document.getElementById("periodEnd").value),
-        bodyCondition: Number(document.getElementById("bodyCondition").value),
-        emotionState: Number(document.getElementById("emotionState").value),
-        timestamp: Date.now()
-      };
+  function backToProfile() {
+    document.getElementById('tracker-view').classList.add('hidden');
+    document.getElementById('profile-view').classList.remove('hidden');
+  }
 
-      db.ref("health_records/" + uid + "/" + today).set(data)
-        .then(() => {
-          alert("记录保存成功！");
-          loadRecords();
-        })
-        .catch(err => alert("保存失败：" + err));
+  // ========== 3. 保存每日记录 ==========
+  function getCheckedValues(name) {
+    const nodes = document.querySelectorAll('input[name="'+name+'"]:checked');
+    return Array.from(nodes).map(n => n.value);
+  }
+
+  function calcSleepHours(startStr, endStr) {
+    if (!startStr || !endStr) return null;
+    const [sh, sm] = startStr.split(':').map(Number);
+    const [eh, em] = endStr.split(':').map(Number);
+    let start = sh + sm/60;
+    let end = eh + em/60;
+    if (end < start) end += 24; // 跨午夜
+    return +(end - start).toFixed(2);
+  }
+
+  function saveDailyRecord() {
+    if (!currentUser) {
+      showMessage('record-msg', '尚未登录 Firebase。', 'error');
+      return;
+    }
+    const uid = currentUser.uid;
+    const date = document.getElementById('record-date').value || todayStr();
+
+    const sleepHours = calcSleepHours(
+      document.getElementById('sleep-start').value,
+      document.getElementById('sleep-end').value
+    );
+
+    const record = {
+      date,
+      // 生理周期
+      onPeriod: document.getElementById('cycle-on-period').value,
+      flow: document.getElementById('cycle-flow').value,
+      bloodColor: document.getElementById('cycle-color').value,
+      symptoms: getCheckedValues('symptom'),
+      // 身体状况
+      bodyWeight: Number(document.getElementById('body-weight').value) || null,
+      steps: Number(document.getElementById('body-steps').value) || null,
+      exerciseMin: Number(document.getElementById('body-exercise-min').value) || null,
+      sleepStart: document.getElementById('sleep-start').value,
+      sleepEnd: document.getElementById('sleep-end').value,
+      sleepHours: sleepHours,
+      waterMl: Number(document.getElementById('body-water').value) || null,
+      dietType: document.getElementById('body-diet').value,
+      // 情绪
+      emotionScore: Number(document.getElementById('emotion-score').value) || null,
+      stressScore: Number(document.getElementById('stress-score').value) || null,
+      triggers: getCheckedValues('trigger'),
+      // 情绪预测相关
+      skinStatus: document.getElementById('skin-status').value,
+      hormoneFeelings: getCheckedValues('hormone'),
+      // 生活方式
+      exerciseType: document.getElementById('lifestyle-exercise-type').value.trim(),
+      sexNote: document.getElementById('lifestyle-sex').value.trim(),
+      timestamp: Date.now()
+    };
+
+    db.ref('users/' + uid + '/records/' + date).set(record)
+      .then(() => {
+        showMessage('record-msg', '今日记录已保存。', 'success');
+        refreshReminders();
+        loadRecentRecordsAndEmotion();
+      })
+      .catch(err => showMessage('record-msg', '保存失败：' + err.message, 'error'));
+  }
+
+  // ========== 4. 健康提醒（经期 / 排卵 / 异常周期） ==========
+  function refreshReminders() {
+    const box = document.getElementById('reminder-area');
+    if (!userProfile || !userProfile.lastPeriodStart || !userProfile.cycleLength) {
+      box.innerHTML = '<p class="small-text">请先完善基本周期信息，系统才能给出经期与排卵期提醒。</p>';
+      return;
+    }
+    const cycleLen = Number(userProfile.cycleLength);
+    const lastStart = new Date(userProfile.lastPeriodStart);
+    const today = new Date();
+    const msPerDay = 24*60*60*1000;
+    const daysSinceLast = Math.round((today - lastStart)/msPerDay);
+    const nextStart = new Date(lastStart.getTime() + cycleLen*msPerDay);
+    const daysToNext = Math.round((nextStart - today)/msPerDay);
+
+    const ovulation = new Date(nextStart.getTime() - 14*msPerDay);
+    const daysToOvulation = Math.round((ovulation - today)/msPerDay);
+
+    let html = '';
+
+    // 1. 经期预测提醒
+    if (daysToNext <= 3 && daysToNext >= -1) {
+      html += `<div class="reminder-item reminder-strong">预计 ${daysToNext === 0 ? '今天' : (daysToNext + ' 天后')} 开始生理期，请提前准备经期用品，注意保暖与休息。</div>`;
+    } else if (daysToNext > 3) {
+      html += `<div class="reminder-item">预计约 ${daysToNext} 天后开始下一次生理期。</div>`;
+    } else if (daysToNext < -1) {
+      html += `<div class="reminder-item">本次月经已超过预计时间，如持续推迟建议适当关注身体状态。</div>`;
     }
 
-    // ==========================
-    // 加载历史记录
-    // ==========================
-    function loadRecords() {
-      if (!currentUser) return;
-
-      const uid = currentUser.uid;
-      const listDiv = document.getElementById("records");
-      listDiv.innerHTML = "加载中...";
-
-      db.ref("health_records/" + uid)
-        .orderByChild("timestamp")
-        .limitToLast(30)
-        .once("value", snapshot => {
-          listDiv.innerHTML = "";
-          snapshot.forEach(child => {
-            const r = child.val();
-            listDiv.innerHTML += `
-              <div class="record">
-                <b>${r.date}</b><br>
-                生理期：${r.periodStart} - ${r.periodEnd}<br>
-                身体状态：${r.bodyCondition}<br>
-                情绪状态：${r.emotionState}
-              </div>
-            `;
-          });
-        });
+    // 2. 排卵期提醒（易孕窗口）
+    if (daysToOvulation >= -2 && daysToOvulation <= 2) {
+      html += `<div class="reminder-item reminder-strong">当前进入排卵附近易孕期。如不备孕，请注意避孕措施；如有备孕计划，可以适当安排。</div>`;
+    } else if (daysToOvulation > 2 && daysToOvulation <= 7) {
+      html += `<div class="reminder-item">大约 ${daysToOvulation} 天后进入排卵期易孕窗口。</div>`;
     }
-  </script>
 
+    // 3. 异常周期简单提示（非常简单的逻辑）
+    if (cycleLen < 21 || cycleLen > 35) {
+      html += `<div class="reminder-item reminder-strong">当前设置的平均周期为 ${cycleLen} 天，偏离常见范围（21~35天）。如长期如此，建议与专业医生讨论。</div>`;
+    }
+
+    if (!html) {
+      html = '<p class="small-text">暂无特别提醒。请继续稳定记录，系统会逐渐生成更准确的提示。</p>';
+    }
+
+    box.innerHTML = html;
+  }
+
+  // ========== 5. 最近记录 & 情绪简单预测 ==========
+  function loadRecentRecordsAndEmotion() {
+    if (!currentUser) return;
+    const uid = currentUser.uid;
+    const ref = db.ref('users/' + uid + '/records');
+
+    ref.orderByChild('timestamp').limitToLast(30).once('value', snap => {
+      const recordsDiv = document.getElementById('recent-records');
+      const predDiv = document.getElementById('emotion-prediction');
+
+      if (!snap.exists()) {
+        recordsDiv.innerHTML = '暂无记录。';
+        predDiv.innerHTML = '暂无足够数据，请先连续记录几天的情绪。';
+        return;
+      }
+
+      const list = [];
+      snap.forEach(child => list.push(child.val()));
+      list.sort((a,b) => (a.date > b.date ? 1 : -1));
+
+      // 最近记录表格
+      let html = '<table><thead><tr><th>日期</th><th>情绪</th><th>压力</th><th>睡眠h</th></tr></thead><tbody>';
+      const last10 = list.slice(-10);
+      last10.forEach(r => {
+        html += `<tr>
+          <td>${r.date}</td>
+          <td>${r.emotionScore ?? '-'}</td>
+          <td>${r.stressScore ?? '-'}</td>
+          <td>${r.sleepHours ?? '-'}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      recordsDiv.innerHTML = html;
+
+      // 情绪预测：基于最近7天情绪 + 睡眠 + 压力简易规则
+      const last7 = list.slice(-7);
+      const emoArr = last7.map(r => Number(r.emotionScore || 0)).filter(v => v > 0);
+      const stressArr = last7.map(r => Number(r.stressScore || 0)).filter(v => v > 0);
+      const sleepArr = last7.map(r => Number(r.sleepHours || 0)).filter(v => v > 0);
+
+      if (emoArr.length < 3) {
+        predDiv.innerHTML = '最近情绪记录不足 3 条，难以判断趋势。请继续记录几天。';
+        return;
+      }
+
+      const avg = arr => arr.reduce((s,v)=>s+v,0)/(arr.length || 1);
+      const emoAvg = avg(emoArr);
+      const stressAvg = stressArr.length ? avg(stressArr) : 3;
+      const sleepAvg = sleepArr.length ? avg(sleepArr) : 7;
+
+      let level = '中';
+      let reason = `最近 ${emoArr.length} 天的情绪平均分约为 ${emoAvg.toFixed(2)}，压力平均为 ${stressAvg.toFixed(2)}，睡眠约 ${sleepAvg.toFixed(1)} 小时。`;
+
+      if (emoAvg >= 4 && stressAvg <= 3 && sleepAvg >= 7) {
+        level = '偏高';
+        reason += ' 整体状态较好，明天出现积极情绪的可能性较大。';
+      } else if (emoAvg <= 2.5 || stressAvg >= 4 || sleepAvg < 6) {
+        level = '偏低';
+        reason += ' 情绪或压力有一定负担，建议适当放松、保证睡眠，可尝试冥想 / 轻运动。';
+      } else {
+        level = '中等';
+        reason += ' 情绪整体波动不大，但仍建议关注压力和睡眠变化。';
+      }
+
+      predDiv.innerHTML = `
+        <div>根据最近几天数据，<b>明日情绪水平预测：${level}</b></div>
+        <div style="margin-top:4px;">${reason}</div>
+        <div class="small-text" style="margin-top:4px;">该预测仅基于简单统计规则，不构成心理或医疗建议。</div>
+      `;
+    });
+  }
+</script>
 </body>
 </html>
