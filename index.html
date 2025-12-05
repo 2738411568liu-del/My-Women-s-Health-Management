@@ -29,10 +29,14 @@
       --text-main: #2b2140;
       --text-soft: #9489b5;
       --border-soft: rgba(155, 107, 255, 0.18);
+      --period: #ff6b9c;
+      --period-light: #ffe3ef;
+      --predicted-period: #ffb3d6;
+      --ovulation: #bb86fc;
+      --safe: #4caf50;
     }
     body {
       margin: 0;
-      /* 星空渐变背景 */
       background:
         radial-gradient(circle at 10% 0%, rgba(255,255,255,0.12), transparent 60%),
         radial-gradient(circle at 80% 0%, rgba(255,195,252,0.14), transparent 55%),
@@ -41,7 +45,6 @@
       min-height: 100vh;
     }
 
-    /* 简单星星点缀 */
     body::before {
       content: "";
       position: fixed;
@@ -355,6 +358,159 @@
       padding: 4px;
     }
 
+    /* —— 美柚风经期日历 —— */
+    .calendar-card h3 {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .calendar-month-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary-deep);
+    }
+    .calendar-nav-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(155, 107, 255, 0.35);
+      background: #f5f0ff;
+      color: var(--primary-deep);
+      width: 26px;
+      height: 26px;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+    .calendar-weekday {
+      text-align: center;
+      color: var(--text-soft);
+      padding-bottom: 2px;
+    }
+    .calendar-cell {
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      background: #ffffff;
+      border: 1px solid #f3e7ff;
+      color: #5a4c81;
+    }
+    .calendar-cell.empty {
+      cursor: default;
+      background: transparent;
+      border: none;
+    }
+    .calendar-cell.period {
+      background: var(--period);
+      color: #fff;
+      border-color: var(--period);
+      font-weight: 600;
+    }
+    .calendar-cell.predicted {
+      background: var(--period-light);
+      color: #cc4b7f;
+      border-color: var(--period-light);
+    }
+    .calendar-cell.safe {
+      color: #2e7d32;
+      border-color: rgba(76, 175, 80, 0.25);
+      background: #e7f7ec;
+    }
+    .calendar-cell.ovulation {
+      background: #f0e3ff;
+      border-color: #d1b7ff;
+      color: #6f42c1;
+      font-weight: 600;
+    }
+    .calendar-cell.today {
+      box-shadow: 0 0 0 2px var(--accent-pink);
+    }
+    .calendar-cell.selected {
+      box-shadow: 0 0 0 2px #222;
+    }
+    .calendar-cell span.today-label {
+      position: absolute;
+      bottom: 2px;
+      font-size: 9px;
+      color: #ff3d7f;
+    }
+
+    .calendar-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--text-soft);
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .legend-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    /* 今日建议：图文布局 */
+    .advice-flex {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .advice-visual {
+      flex: 0 0 150px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .advice-card-visual {
+      background: #fbf8ff;
+      border-radius: 14px;
+      padding: 6px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(155, 107, 255, 0.25);
+    }
+    .advice-card-visual img {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      object-fit: cover;
+    }
+    .advice-card-visual-title {
+      font-size: 11px;
+      color: #5a4c81;
+      font-weight: 600;
+    }
+    .advice-card-visual-text {
+      font-size: 10px;
+      color: var(--text-soft);
+    }
+
     @media (max-width: 768px) {
       .topbar {
         flex-direction: column;
@@ -448,7 +604,7 @@
       </p>
     </div>
 
-    <!-- ========== 页面 2：多步每日记录 + 建议 ========== -->
+    <!-- ========== 页面 2：多步每日记录 + 日历 + 建议 ========== -->
     <div id="tracker-view" class="hidden">
       <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -460,6 +616,35 @@
             </div>
           </div>
           <button class="btn-secondary btn-small" onclick="backToProfile()">← 返回修改基本资料</button>
+        </div>
+      </div>
+
+      <!-- 经期日历：参考美柚 -->
+      <div class="card calendar-card">
+        <h3>📆 经期日历（参考美柚布局）</h3>
+        <p class="small-text">可以点击日期进行选择，系统会自动填入“记录日期”。颜色标记经期、预测经期、排卵日和安全期。</p>
+        <div class="calendar-header">
+          <button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)">‹</button>
+          <div id="calendar-month-label" class="calendar-month-label"></div>
+          <button class="calendar-nav-btn" onclick="changeCalendarMonth(1)">›</button>
+        </div>
+        <div id="calendar-grid" class="calendar-grid"></div>
+        <div class="calendar-legend">
+          <div class="legend-item">
+            <div class="legend-color" style="background: var(--period);"></div><span>经期</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: var(--period-light);"></div><span>预测经期</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: #f0e3ff;"></div><span>排卵日</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: #e7f7ec;"></div><span>安全期</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="border-radius:50%; border:2px solid var(--accent-pink);"></div><span>今天</span>
+          </div>
         </div>
       </div>
 
@@ -622,13 +807,40 @@
               <button class="btn-primary" type="button" onclick="saveDailyRecord(true)">保存并生成今日建议 →</button>
             </div>
 
-            <!-- Step 5：保存后显示建议 -->
+            <!-- Step 5：保存后显示建议（图文版） -->
             <div class="step-page hidden" id="step-5">
               <div class="section-title">今日女性生理健康建议</div>
-              <div id="advice-content" class="small-text">
-                （保存记录后，这里会显示结合经期、身体状况与情绪的文字建议。）
+              <div class="advice-flex">
+                <!-- 左侧图片卡片：图文叙述 -->
+                <div class="advice-visual">
+                  <div class="advice-card-visual">
+                    <img src="https://img.icons8.com/color/96/feminine-hygiene-pad.png" alt="经期护理图示">
+                    <div>
+                      <div class="advice-card-visual-title">经期小贴士</div>
+                      <div class="advice-card-visual-text">暖宫、放松、不过度劳累。</div>
+                    </div>
+                  </div>
+                  <div class="advice-card-visual">
+                    <img src="https://img.icons8.com/color/96/sleeping.png" alt="睡眠与情绪">
+                    <div>
+                      <div class="advice-card-visual-title">睡眠 & 情绪</div>
+                      <div class="advice-card-visual-text">睡眠足，情绪更稳定。</div>
+                    </div>
+                  </div>
+                  <div class="advice-card-visual">
+                    <img src="https://img.icons8.com/color/96/yoga.png" alt="轻运动">
+                    <div>
+                      <div class="advice-card-visual-title">轻运动推荐</div>
+                      <div class="advice-card-visual-text">散步、拉伸、简单瑜伽。</div>
+                    </div>
+                  </div>
+                </div>
+                <!-- 右侧文字建议 -->
+                <div id="advice-content" class="small-text" style="flex:1;">
+                  （保存记录后，这里会显示结合经期、身体状况与情绪的文字建议。）
+                </div>
               </div>
-              <button class="btn-primary" type="button" onclick="goBackToFirstStep()">← 返回继续记录</button>
+              <button class="btn-primary" type="button" style="margin-top:10px;" onclick="goBackToFirstStep()">← 返回继续记录</button>
             </div>
           </div>
         </div>
@@ -666,6 +878,20 @@
           </div>
         </div>
       </div>
+
+      <!-- 统计说明 & 系统价值（给老师看用） -->
+      <div class="card">
+        <h3>📘 关于本系统 & 统计说明</h3>
+        <p class="small-text">
+          本网页应用用于演示女性生理期与情绪管理系统，结合<b>统计学与决策支持</b>理念：
+        </p>
+        <ul class="small-text">
+          <li>对用户：提供经期记录、情绪打卡与图文健康建议，帮助了解自身身体节奏与情绪模式。</li>
+          <li>对企业/研究者：可作为女性健康管理产品雏形，用于测试统计模型、情绪预测算法等。</li>
+          <li>统计方法示例：使用最近 7 日数据计算情绪与压力平均值、睡眠平均时长，并给出简单的情绪等级预测。</li>
+          <li>后续可扩展：相关分析（睡眠 vs. 情绪）、回归模型/贝叶斯更新（周期预测）、更精细的时间序列分析等。</li>
+        </ul>
+      </div>
     </div>
   </div>
 </div>
@@ -691,6 +917,11 @@
   let currentStep = 1;
   let lastSavedRecord = null;
   let historyChart = null;
+
+  // 日历当前年月
+  let calendarYear = null;
+  let calendarMonth = null; // 0-11
+  let selectedCalendarDate = null;
 
   function initAnonymousUid() {
     const key = 'mh_local_uid';
@@ -815,8 +1046,10 @@
       document.getElementById('tracker-title').textContent =
         `② ${userProfile.name} 的每日记录 · 星光陪伴`;
     }
+    document.getElementById('record-date').value = todayStr();
     currentStep = 1;
     updateStepUI();
+    initCalendar();       // 初始化经期日历
     refreshReminders();
     loadRecentRecordsAndEmotion();
   }
@@ -939,7 +1172,137 @@
     box.innerHTML = html;
   }
 
-  // ========== 6. 最近记录 & 情绪预测 & 可视化 ==========
+  // ========== 6. 经期日历（参考美柚） ==========
+  function initCalendar() {
+    const today = new Date();
+    calendarYear = today.getFullYear();
+    calendarMonth = today.getMonth();
+    selectedCalendarDate = null;
+    renderCalendar();
+  }
+
+  function changeCalendarMonth(offset) {
+    calendarMonth += offset;
+    if (calendarMonth < 0) {
+      calendarMonth = 11;
+      calendarYear -= 1;
+    } else if (calendarMonth > 11) {
+      calendarMonth = 0;
+      calendarYear += 1;
+    }
+    renderCalendar();
+  }
+
+  function formatDateYMD(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function sameDay(d1, d2) {
+    return d1.getFullYear() === d2.getFullYear() &&
+           d1.getMonth() === d2.getMonth() &&
+           d1.getDate() === d2.getDate();
+  }
+
+  function renderCalendar() {
+    const grid = document.getElementById('calendar-grid');
+    const label = document.getElementById('calendar-month-label');
+    if (!grid || !label) return;
+
+    const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+    label.textContent = `${calendarYear}年 ${monthNames[calendarMonth]}`;
+
+    grid.innerHTML = '';
+
+    const weekdays = ['日','一','二','三','四','五','六'];
+    weekdays.forEach(w => {
+      const div = document.createElement('div');
+      div.className = 'calendar-weekday';
+      div.textContent = w;
+      grid.appendChild(div);
+    });
+
+    const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+    const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+    const today = new Date();
+
+    // 周期参数
+    const hasProfile = userProfile && userProfile.lastPeriodStart && userProfile.cycleLength && userProfile.periodLength;
+    let lastStart = null, cycleLen = null, periodLen = null, nextStart = null, ovulation = null;
+    if (hasProfile) {
+      lastStart = new Date(userProfile.lastPeriodStart);
+      cycleLen = Number(userProfile.cycleLength);
+      periodLen = Number(userProfile.periodLength) || 5;
+      const msPerDay = 24*60*60*1000;
+      nextStart = new Date(lastStart.getTime() + cycleLen * msPerDay);
+      ovulation = new Date(nextStart.getTime() - 14 * msPerDay);
+    }
+
+    // 前置空格
+    for (let i = 0; i < firstDay; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'calendar-cell empty';
+      grid.appendChild(cell);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cellDate = new Date(calendarYear, calendarMonth, d);
+      const cell = document.createElement('div');
+      cell.className = 'calendar-cell';
+      cell.textContent = d;
+
+      if (hasProfile) {
+        const msPerDay = 24*60*60*1000;
+        const inPeriod =
+          cellDate >= lastStart &&
+          cellDate < new Date(lastStart.getTime() + periodLen * msPerDay);
+
+        const inPredictedPeriod =
+          cellDate >= nextStart &&
+          cellDate < new Date(nextStart.getTime() + periodLen * msPerDay);
+
+        const isOvulation = ovulation && sameDay(cellDate, ovulation);
+
+        if (inPeriod) {
+          cell.classList.add('period');
+        } else if (inPredictedPeriod) {
+          cell.classList.add('predicted');
+        } else if (isOvulation) {
+          cell.classList.add('ovulation');
+        } else {
+          // 简化：在周期区间内的其他天视为安全期
+          if (cycleLen >= 21 && cycleLen <= 35) {
+            cell.classList.add('safe');
+          }
+        }
+      }
+
+      if (sameDay(cellDate, today)) {
+        cell.classList.add('today');
+        const span = document.createElement('span');
+        span.className = 'today-label';
+        span.textContent = '今';
+        cell.appendChild(span);
+      }
+
+      cell.addEventListener('click', () => {
+        if (cell.classList.contains('empty')) return;
+        selectedCalendarDate = cellDate;
+        document.getElementById('record-date').value = formatDateYMD(cellDate);
+
+        // 重置所有选中状态
+        const allCells = grid.querySelectorAll('.calendar-cell');
+        allCells.forEach(c => c.classList.remove('selected'));
+        cell.classList.add('selected');
+      });
+
+      grid.appendChild(cell);
+    }
+  }
+
+  // ========== 7. 最近记录 & 情绪预测 & 可视化 ==========
   function loadRecentRecordsAndEmotion() {
     if (!currentUid) return;
     const uid = currentUid;
@@ -1095,7 +1458,7 @@
     });
   }
 
-  // ========== 7. 生成“女性生理健康建议” ==========
+  // ========== 8. 生成“女性生理健康建议” ==========
   function buildAdviceHTML(profile, record) {
     const parts = [];
     parts.push(`<p>基于你今天的记录（日期：<b>${record.date}</b>）、周期参数和近期状态，以下建议仅供自我观察与参考。</p>`);
