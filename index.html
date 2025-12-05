@@ -2,12 +2,11 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>女性健康管理系统（Firebase 版）</title>
+  <title>女性健康管理系统（Firebase 版，无登录）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- 使用 Firebase v10 兼容版（compat），方便用旧语法 firebase.xxx -->
+  <!-- 使用 Firebase v10 compat 版本，仅用 App + Realtime Database -->
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 
   <style>
@@ -164,8 +163,11 @@
 <div class="container">
   <!-- 顶部说明 -->
   <div class="card">
-    <div class="tagline">⚠ 本系统仅用于学习与研究示例，不构成医疗诊断或正式健康建议。</div>
-    <h1>女性健康管理系统（Firebase示例）</h1>
+    <div class="tagline">
+      ⚠ 本系统仅用于学习与研究示例，不构成医疗诊断或正式健康建议。
+      数据按本设备生成的匿名ID存入 Firebase Realtime Database。
+    </div>
+    <h1>女性健康管理系统（Firebase示例，无登录）</h1>
     <p class="small-text">
       流程：注册个人基本信息 → 进入第二页记录 <b>生理周期 / 身体状况 / 情绪与生活方式</b> → 自动生成简单健康提醒与情绪预测提示。
     </p>
@@ -223,7 +225,8 @@
 
     <button class="btn-primary" onclick="saveProfileAndNext()">保存并进入健康记录页面</button>
     <p class="small-text" style="margin-top:6px;">
-      提示：信息将以匿名 UID 存储在 Firebase Realtime Database 的 <code>users/{uid}/profile</code> 下。
+      提示：信息将以本设备的匿名ID存储在 Firebase Realtime Database 的
+      <code>users/{anonymousUid}/profile</code> 下。
     </p>
   </div>
 
@@ -424,29 +427,22 @@
   };
 
   firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
   const db = firebase.database();
 
-  let currentUser = null;
-  let userProfile = null;  // 存储基本信息
+  // 使用本地生成的匿名UID，代替登录
+  let currentUid = null;
+  let userProfile = null;
 
-  // 匿名登录
-  auth.signInAnonymously()
-    .then(() => {
-      console.log("匿名登录成功");
-      auth.onAuthStateChanged(user => {
-        currentUser = user;
-        if (user) {
-          loadProfile();
-        }
-      });
-    })
-    .catch(err => {
-      console.error(err);
-      showMessage('profile-msg', 'Firebase 登录失败：' + err.message, 'error');
-    });
+  function initAnonymousUid() {
+    const key = 'mh_local_uid';
+    let uid = localStorage.getItem(key);
+    if (!uid) {
+      uid = 'u_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem(key, uid);
+    }
+    currentUid = uid;
+  }
 
-  // ========== 通用提示函数 ==========
   function showMessage(id, text, type) {
     const el = document.getElementById(id);
     if (!text) { el.innerHTML = ''; return; }
@@ -466,16 +462,18 @@
   }
 
   window.addEventListener('DOMContentLoaded', () => {
+    initAnonymousUid();
     document.getElementById('record-date').value = todayStr();
+    loadProfile();
   });
 
   // ========== 2. 个人信息：保存 & 加载 & 页面切换 ==========
   function saveProfileAndNext() {
-    if (!currentUser) {
-      showMessage('profile-msg', '尚未登录 Firebase。', 'error');
+    if (!currentUid) {
+      showMessage('profile-msg', '本地匿名ID未生成，请刷新页面重试。', 'error');
       return;
     }
-    const uid = currentUser.uid;
+    const uid = currentUid;
     const profile = {
       name: document.getElementById('profile-name').value.trim(),
       age: Number(document.getElementById('profile-age').value),
@@ -503,12 +501,12 @@
   }
 
   function loadProfile() {
-    const uid = currentUser.uid;
+    if (!currentUid) return;
+    const uid = currentUid;
     db.ref('users/' + uid + '/profile').once('value', snap => {
       const data = snap.val();
       if (data) {
         userProfile = data;
-        // 自动填充表单
         document.getElementById('profile-name').value = data.name || '';
         document.getElementById('profile-age').value = data.age || '';
         document.getElementById('profile-height').value = data.height || '';
@@ -518,7 +516,7 @@
         document.getElementById('profile-last-period').value = data.lastPeriodStart || '';
         document.getElementById('profile-usual-flow').value = data.usualFlow || '';
 
-        // 默认直接进入记录页面（如果已有资料）
+        // 如果已有资料，默认直接进入记录页面
         enterTrackerView();
       }
     });
@@ -552,16 +550,16 @@
     const [eh, em] = endStr.split(':').map(Number);
     let start = sh + sm/60;
     let end = eh + em/60;
-    if (end < start) end += 24; // 跨午夜
+    if (end < start) end += 24;
     return +(end - start).toFixed(2);
   }
 
   function saveDailyRecord() {
-    if (!currentUser) {
-      showMessage('record-msg', '尚未登录 Firebase。', 'error');
+    if (!currentUid) {
+      showMessage('record-msg', '本地匿名ID未生成，请刷新页面重试。', 'error');
       return;
     }
-    const uid = currentUser.uid;
+    const uid = currentUid;
     const date = document.getElementById('record-date').value || todayStr();
 
     const sleepHours = calcSleepHours(
@@ -571,12 +569,10 @@
 
     const record = {
       date,
-      // 生理周期
       onPeriod: document.getElementById('cycle-on-period').value,
       flow: document.getElementById('cycle-flow').value,
       bloodColor: document.getElementById('cycle-color').value,
       symptoms: getCheckedValues('symptom'),
-      // 身体状况
       bodyWeight: Number(document.getElementById('body-weight').value) || null,
       steps: Number(document.getElementById('body-steps').value) || null,
       exerciseMin: Number(document.getElementById('body-exercise-min').value) || null,
@@ -585,14 +581,11 @@
       sleepHours: sleepHours,
       waterMl: Number(document.getElementById('body-water').value) || null,
       dietType: document.getElementById('body-diet').value,
-      // 情绪
       emotionScore: Number(document.getElementById('emotion-score').value) || null,
       stressScore: Number(document.getElementById('stress-score').value) || null,
       triggers: getCheckedValues('trigger'),
-      // 情绪预测相关
       skinStatus: document.getElementById('skin-status').value,
       hormoneFeelings: getCheckedValues('hormone'),
-      // 生活方式
       exerciseType: document.getElementById('lifestyle-exercise-type').value.trim(),
       sexNote: document.getElementById('lifestyle-sex').value.trim(),
       timestamp: Date.now()
@@ -618,7 +611,6 @@
     const lastStart = new Date(userProfile.lastPeriodStart);
     const today = new Date();
     const msPerDay = 24*60*60*1000;
-    const daysSinceLast = Math.round((today - lastStart)/msPerDay);
     const nextStart = new Date(lastStart.getTime() + cycleLen*msPerDay);
     const daysToNext = Math.round((nextStart - today)/msPerDay);
 
@@ -627,25 +619,28 @@
 
     let html = '';
 
-    // 1. 经期预测提醒
     if (daysToNext <= 3 && daysToNext >= -1) {
-      html += `<div class="reminder-item reminder-strong">预计 ${daysToNext === 0 ? '今天' : (daysToNext + ' 天后')} 开始生理期，请提前准备经期用品，注意保暖与休息。</div>`;
+      html += `<div class="reminder-item reminder-strong">
+        预计 ${daysToNext === 0 ? '今天' : (daysToNext + ' 天后')} 开始生理期，请提前准备经期用品，注意保暖与休息。
+      </div>`;
     } else if (daysToNext > 3) {
       html += `<div class="reminder-item">预计约 ${daysToNext} 天后开始下一次生理期。</div>`;
     } else if (daysToNext < -1) {
       html += `<div class="reminder-item">本次月经已超过预计时间，如持续推迟建议适当关注身体状态。</div>`;
     }
 
-    // 2. 排卵期提醒（易孕窗口）
     if (daysToOvulation >= -2 && daysToOvulation <= 2) {
-      html += `<div class="reminder-item reminder-strong">当前进入排卵附近易孕期。如不备孕，请注意避孕措施；如有备孕计划，可以适当安排。</div>`;
+      html += `<div class="reminder-item reminder-strong">
+        当前进入排卵附近易孕期。如不备孕，请注意避孕措施；如有备孕计划，可以适当安排。
+      </div>`;
     } else if (daysToOvulation > 2 && daysToOvulation <= 7) {
       html += `<div class="reminder-item">大约 ${daysToOvulation} 天后进入排卵期易孕窗口。</div>`;
     }
 
-    // 3. 异常周期简单提示（非常简单的逻辑）
     if (cycleLen < 21 || cycleLen > 35) {
-      html += `<div class="reminder-item reminder-strong">当前设置的平均周期为 ${cycleLen} 天，偏离常见范围（21~35天）。如长期如此，建议与专业医生讨论。</div>`;
+      html += `<div class="reminder-item reminder-strong">
+        当前设置的平均周期为 ${cycleLen} 天，偏离常见范围（21~35天）。如长期如此，建议与专业医生讨论。
+      </div>`;
     }
 
     if (!html) {
@@ -657,8 +652,8 @@
 
   // ========== 5. 最近记录 & 情绪简单预测 ==========
   function loadRecentRecordsAndEmotion() {
-    if (!currentUser) return;
-    const uid = currentUser.uid;
+    if (!currentUid) return;
+    const uid = currentUid;
     const ref = db.ref('users/' + uid + '/records');
 
     ref.orderByChild('timestamp').limitToLast(30).once('value', snap => {
@@ -675,7 +670,6 @@
       snap.forEach(child => list.push(child.val()));
       list.sort((a,b) => (a.date > b.date ? 1 : -1));
 
-      // 最近记录表格
       let html = '<table><thead><tr><th>日期</th><th>情绪</th><th>压力</th><th>睡眠h</th></tr></thead><tbody>';
       const last10 = list.slice(-10);
       last10.forEach(r => {
@@ -689,7 +683,6 @@
       html += '</tbody></table>';
       recordsDiv.innerHTML = html;
 
-      // 情绪预测：基于最近7天情绪 + 睡眠 + 压力简易规则
       const last7 = list.slice(-7);
       const emoArr = last7.map(r => Number(r.emotionScore || 0)).filter(v => v > 0);
       const stressArr = last7.map(r => Number(r.stressScore || 0)).filter(v => v > 0);
@@ -705,7 +698,7 @@
       const stressAvg = stressArr.length ? avg(stressArr) : 3;
       const sleepAvg = sleepArr.length ? avg(sleepArr) : 7;
 
-      let level = '中';
+      let level = '中等';
       let reason = `最近 ${emoArr.length} 天的情绪平均分约为 ${emoAvg.toFixed(2)}，压力平均为 ${stressAvg.toFixed(2)}，睡眠约 ${sleepAvg.toFixed(1)} 小时。`;
 
       if (emoAvg >= 4 && stressAvg <= 3 && sleepAvg >= 7) {
@@ -714,9 +707,6 @@
       } else if (emoAvg <= 2.5 || stressAvg >= 4 || sleepAvg < 6) {
         level = '偏低';
         reason += ' 情绪或压力有一定负担，建议适当放松、保证睡眠，可尝试冥想 / 轻运动。';
-      } else {
-        level = '中等';
-        reason += ' 情绪整体波动不大，但仍建议关注压力和睡眠变化。';
       }
 
       predDiv.innerHTML = `
