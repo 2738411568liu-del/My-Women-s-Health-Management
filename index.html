@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>女性健康管理系统 - Firebase 版</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7fb;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      background: #4b7bec;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #3867d6;
+    }
+    h2 { margin-bottom: 5px; }
+    .record {
+      padding: 10px;
+      background: #eef3ff;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>女性健康管理（Firebase 数据库版）</h2>
+    <p>匿名登录已自动启用，数据将存入 Firebase Realtime Database。</p>
+
+    <hr>
+
+    <h3>📅 记录每日健康状态</h3>
+
+    <label>生理期开始日期（1-31）</label>
+    <input type="number" id="periodStart" min="0" max="31" placeholder="例如：5（无请输入0）">
+
+    <label>生理期结束日期（1-31）</label>
+    <input type="number" id="periodEnd" min="0" max="31" placeholder="例如：10（无请输入0）">
+
+    <label>身体状态（1-5）</label>
+    <input type="number" id="bodyCondition" min="1" max="5" value="3">
+
+    <label>情绪状态（1-5）</label>
+    <input type="number" id="emotionState" min="1" max="5" value="3">
+
+    <button onclick="saveRecord()">保存记录</button>
+
+    <hr>
+
+    <h3>📊 历史记录</h3>
+    <div id="records"></div>
+  </div>
+
+  <script>
+    // ===============================
+    // Firebase 配置（已使用你提供的配置）
+    // ===============================
+    const firebaseConfig = {
+      apiKey: "AIzaSyA8m1mFT8lwW553kB3pJmVv8ViMEBYSrDM",
+      authDomain: "my-women-s-health-management.firebaseapp.com",
+      databaseURL: "https://my-women-s-health-management-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "my-women-s-health-management",
+      storageBucket: "my-women-s-health-management.firebasestorage.app",
+      messagingSenderId: "281305293774",
+      appId: "1:281305293774:web:7f3345d120d1b2d5c8819f",
+      measurementId: "G-E2T3SZ6CX9"
+    };
+
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    let currentUser = null;
+
+    // 自动匿名登录
+    auth.signInAnonymously()
+      .then(() => {
+        console.log("匿名登录成功");
+        auth.onAuthStateChanged(user => {
+          currentUser = user;
+          loadRecords();
+        });
+      })
+      .catch(err => console.error(err));
+
+
+    // ==========================
+    // 保存记录到 Firebase
+    // ==========================
+    function saveRecord() {
+      if (!currentUser) return alert("用户未登录");
+
+      const uid = currentUser.uid;
+      const today = new Date().toISOString().split('T')[0];
+
+      const data = {
+        date: today,
+        periodStart: Number(document.getElementById("periodStart").value),
+        periodEnd: Number(document.getElementById("periodEnd").value),
+        bodyCondition: Number(document.getElementById("bodyCondition").value),
+        emotionState: Number(document.getElementById("emotionState").value),
+        timestamp: Date.now()
+      };
+
+      db.ref("health_records/" + uid + "/" + today).set(data)
+        .then(() => {
+          alert("记录保存成功！");
+          loadRecords();
+        })
+        .catch(err => alert("保存失败：" + err));
+    }
+
+    // ==========================
+    // 加载历史记录
+    // ==========================
+    function loadRecords() {
+      if (!currentUser) return;
+
+      const uid = currentUser.uid;
+      const listDiv = document.getElementById("records");
+      listDiv.innerHTML = "加载中...";
+
+      db.ref("health_records/" + uid)
+        .orderByChild("timestamp")
+        .limitToLast(30)
+        .once("value", snapshot => {
+          listDiv.innerHTML = "";
+          snapshot.forEach(child => {
+            const r = child.val();
+            listDiv.innerHTML += `
+              <div class="record">
+                <b>${r.date}</b><br>
+                生理期：${r.periodStart} - ${r.periodEnd}<br>
+                身体状态：${r.bodyCondition}<br>
+                情绪状态：${r.emotionState}
+              </div>
+            `;
+          });
+        });
+    }
+  </script>
+
+</body>
+</html>
